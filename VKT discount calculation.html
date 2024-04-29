@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>Vem Ki Tem - Desconto</title>
+    <!-- Adicionando o ícone de favoritos -->
+    <link rel="icon" type="image/png" href="https://i.pinimg.com/736x/ee/30/94/ee30945a5acd5bb25c6a3f4bbf88610a.jpg">
+    
+    <style>
+        :root {
+            --bg-color: #f2f2f2;
+            --font-family: 'Poppins', sans-serif;
+            --primary-color: #007bff;
+            --secondary-color: #ddd;
+            --text-color-dark: #333;
+            --text-color-light: #555;
+            --error-color: #d9534f;
+            --success-color: #5cb85c;
+            --border-color: #000;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #header img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            display: block; /* Garante que a margem inferior funcione corretamente */
+        }
+
+        input, select, button {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid var(--secondary-color);
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--border-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-color-dark);
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--text-color-light);
+        }
+
+        .message {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .discount-message {
+            color: var(--error-color);
+        }
+
+        .copy-message {
+            color: var(--success-color);
+        }
+
+        .gerencia-message {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <img src="https://portalentorno.com.br/wp-content/uploads/2023/08/VemKitem_-_Laranja__1_.png_name_20230426-15476-181qb3d.png" alt="Imagem de cabeçalho">
+        </div>
+        <form id="form">
+            <label for="selectType">Tipo:</label>
+            <select id="selectType" name="selectType">
+                <option value="tabloide">Desconto Tabloide</option>
+                <option value="integral">Desconto Promocional Integral</option>
+            </select>
+            <div id="priceFields">
+                <label for="originalPrice">Preço Cadastrado (R$):</label>
+                <input type="text" id="originalPrice" name="originalPrice" required placeholder="Digite o preço cadastrado" inputmode="decimal">
+                <label for="promoPrice">Preço Tabloide (R$):</label>
+                <input type="text" id="promoPrice" name="promoPrice" required placeholder="Digite o preço tabloide" inputmode="decimal">
+            </div>
+            <button type="submit">Calcular Desconto</button>
+        </form>
+        <div id="result"></div>
+        <div class="message discount-message" id="discountMessage"></div>
+        <div class="message copy-message" id="copyMessage"></div>
+        <div class="message gerencia-message" id="gerenciaMessage"></div>
+    </div>
+
+    <script>
+        const clearResult = () => {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('discountMessage').innerHTML = '';
+            document.getElementById('copyMessage').innerHTML = '';
+            document.getElementById('gerenciaMessage').innerHTML = '';
+        };
+
+        const copyToClipboard = value => {
+            const tempInput = document.createElement("input");
+            tempInput.value = value.replace('%', ''); // Remove o %
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            document.getElementById('copyMessage').innerHTML = 'Valor copiado';
+            setTimeout(() => {
+                document.getElementById('copyMessage').innerHTML = '';
+            }, 2000);
+        };
+
+        const filterNumericInput = (event) => {
+            const charCode = event.which ? event.which : event.keyCode;
+            if ((charCode < 48 || charCode > 57) && charCode !== 44 && charCode !== 46) {
+                event.preventDefault();
+            }
+        };
+
+        document.getElementById('originalPrice').addEventListener('keypress', filterNumericInput);
+        document.getElementById('promoPrice').addEventListener('keypress', filterNumericInput);
+
+        document.getElementById('form').addEventListener('submit', event => {
+            event.preventDefault();
+            const originalPrice = parseFloat(document.getElementById('originalPrice').value.replace(',', '.'));
+            const promoPrice = parseFloat(document.getElementById('promoPrice').value.replace(',', '.'));
+            const resultDiv = document.getElementById('result');
+            const selectType = document.getElementById('selectType').value;
+
+            if (isNaN(originalPrice) || isNaN(promoPrice)) {
+                resultDiv.innerHTML = "Por favor, insira valores válidos para os preços.";
+                return;
+            }
+
+            if (selectType === 'tabloide') {
+                const percentage = ((originalPrice - promoPrice) / originalPrice) * 100;
+                resultDiv.innerHTML = `Desconto: ${percentage.toFixed(3)}%`;
+                document.getElementById('discountMessage').innerHTML = '';
+                copyToClipboard(`${percentage.toFixed(3)}%`);
+            } else if (selectType === 'integral') {
+                if (promoPrice < 0 || promoPrice > 100) {
+                    resultDiv.innerHTML = "Por favor, insira um valor válido entre 0 e 100 para o desconto promocional integral.";
+                    return;
+                }
+                const valorComDesconto = originalPrice - (originalPrice * (promoPrice / 100));
+                resultDiv.innerHTML = `Valor com desconto: R$ ${valorComDesconto.toFixed(2)}`;
+                if (promoPrice > 15) {
+                    document.getElementById('gerenciaMessage').innerHTML = 'Verificar desconto com a gerência.';
+                }
+            }
+
+            document.getElementById('originalPrice').value = '';
+            document.getElementById('promoPrice').value = '';
+        });
+
+        document.getElementById('selectType').addEventListener('change', () => {
+            clearResult();
+            const selectType = document.getElementById('selectType').value;
+            const priceFields = document.getElementById('priceFields');
+            if (selectType === 'integral') {
+                priceFields.innerHTML = '<label for="originalPrice">Valor Total (R$):</label><input type="text" id="originalPrice" name="originalPrice" required placeholder="Digite o valor total" inputmode="decimal">';
+                priceFields.innerHTML += '<label for="promoPrice">Porcentagem (%):</label><input type="text" id="promoPrice" name="promoPrice" required placeholder="Digite a porcentagem" inputmode="decimal">';
+            } else if (selectType === 'tabloide') {
+                priceFields.innerHTML = '<label for="originalPrice">Preço Cadastrado (R$):</label><input type="text" id="originalPrice" name="originalPrice" required placeholder="Digite o preço cadastrado" inputmode="decimal">';
+                priceFields.innerHTML += '<label for="promoPrice">Preço Tabloide (R$):</label><input type="text" id="promoPrice" name="promoPrice" required placeholder="Digite o preço tabloide" inputmode="decimal">';
+            }
+        });
+    </script>
+</body>
+</html>
